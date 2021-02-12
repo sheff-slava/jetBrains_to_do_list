@@ -25,8 +25,10 @@ session = Session()
 
 today = datetime.today()
 
-print("1) Today's tasks", "2) Week's tasks", "3) All tasks", "4) Add task", "0) Exit",  sep='\n')
+print("1) Today's tasks", "2) Week's tasks", "3) All tasks",
+      "4) Missed tasks", "5) Add task", "6) Delete task", "0) Exit",  sep='\n')
 action = int(input())
+
 while action != 0:
     if action == 1:
         print(f'\nToday {today.day} {today.strftime("%b")}:')
@@ -39,6 +41,7 @@ while action != 0:
         else:
             print('Nothing to do!')
         print()
+
     elif action == 2:
         weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         curr_day = today
@@ -55,6 +58,7 @@ while action != 0:
                 print('Nothing to do!')
             curr_day += timedelta(days=1)
         print()
+
     elif action == 3:
         print('\nAll tasks:')
         rows = session.query(Table).order_by(Table.deadline).all()
@@ -66,7 +70,20 @@ while action != 0:
         else:
             print('Nothing to do!')
         print()
+
     elif action == 4:
+        print('\nMissed tasks:')
+        rows = session.query(Table).filter(Table.deadline < today.date()).all()
+        count = 1
+        if len(rows) != 0:
+            for row in rows:
+                print(f'{count}. {row.task}. {row.deadline.day} {row.deadline.strftime("%b")}')
+                count += 1
+        else:
+            print('Nothing is missed!')
+        print()
+
+    elif action == 5:
         task = input('\nEnter task\n')
         deadline = input('Enter deadline\n')
         new_row = Table(task=task, deadline=datetime.strptime(deadline, '%Y-%m-%d'))
@@ -74,7 +91,20 @@ while action != 0:
         session.commit()
         print('The task has been added!\n')
 
-    print("1) Today's tasks", "2) Week's tasks", "3) All tasks", "4) Add task", "0) Exit",  sep='\n')
+    elif action == 6:
+        print('\nChoose the number of the task you want to delete:')
+        rows = session.query(Table).order_by(Table.deadline).all()
+        count = 1
+        for row in rows:
+            print(f'{count}. {row.task}. {row.deadline.day} {row.deadline.strftime("%b")}')
+            count += 1
+        number = int(input())
+        session.delete(rows[number - 1])
+        session.commit()
+        print('The task has been deleted!\n')
+
+    print("1) Today's tasks", "2) Week's tasks", "3) All tasks",
+          "4) Missed tasks", "5) Add task", "6) Delete task", "0) Exit", sep='\n')
     action = int(input())
 
 print('\nBye!')
